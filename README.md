@@ -138,13 +138,72 @@ python3 -m unittest discover -s sdk/python -v        # SDK / CLI
 ## Bench
 
 ```bash
-go run ./cmd/simulate                       # 1,000 jobs, seed 42
-go run ./cmd/simulate -jobs 1000 -seed 7
+go run ./cmd/simulate                       # 1,000 jobs, seed 42, mean arrival gap 3 min
+go run ./cmd/simulate -gap 1                # same jobs arriving 3x faster (contention)
 go run ./cmd/loadtest -n 5000 -c 32         # in-process server
 go run ./cmd/loadtest -base http://localhost:8080
 ```
 
-RESULTS_PLACEHOLDER
+### Sanity runs
+
+These were copied verbatim from CI (GitHub Actions `ubuntu-latest`, 4 vCPU
+AMD EPYC 9V45, go1.27.3, commit `8b965e1`). Each push to `main` overwrites
+the [`bench-results`](../../tree/bench-results) branch with the latest run's raw
+test, simulate and load-test output. The simulate numbers are deterministic.
+The load-test numbers vary from run to run. A laptop run was not captured, see
+[Unfinished](#unfinished).
+
+```
+$ go run ./cmd/simulate
+workload: 1000 jobs, seed 42, mean arrival gap 3.0 min, 512 simulated GPUs, 1-min ticks
+
+scheduler   done makespan   util  waitP50m  waitP95m  preempt recovered  crossPool  lostGPUm  $/GPUh
+best-fit    1000    54.7h  47.0%         1        52      138       138         89      5122    1.24
+first-fit   1000    53.5h  48.0%         1        44       71        71         34      3407    2.19
+
+best-fit vs first-fit: utilization -1.0 pts, wait p50 +0 min, wait p95 +8 min, $/GPU-hour -0.95
+
+$ go run ./cmd/simulate -gap 1
+workload: 1000 jobs, seed 42, mean arrival gap 1.0 min, 512 simulated GPUs, 1-min ticks
+
+scheduler   done makespan   util  waitP50m  waitP95m  preempt recovered  crossPool  lostGPUm  $/GPUh
+best-fit    1000    45.5h  56.5%         8      1164      148       148         49      5164    1.66
+first-fit   1000    43.6h  58.8%         8      1105       99        99         20      3430    1.76
+
+best-fit vs first-fit: utilization -2.3 pts, wait p50 +1 min, wait p95 +59 min, $/GPU-hour -0.09
+
+$ go run ./cmd/loadtest -n 5000 -c 32
+requests=5000 errors=0 concurrency=32 elapsed=416ms throughput=12029 req/s
+latency ms: p50=1.81 p95=7.34 p99=7.97 max=8.30
+```
+
+Columns: `util` is GPU-minutes used / (512 × makespan). `waitP50m`/`waitP95m`
+are submit-to-first-start in minutes. `recovered` counts preempted jobs that
+restarted from their checkpoint. `crossPool` counts the recoveries that landed
+on a different pool. `lostGPUm` is GPU-minutes of work done after the last
+checkpoint and redone. `$/GPUh` is the average price paid.
+
+**What the numbers say:**
+
+- On this workload, **best-fit does not beat first-fit on utilization.** It
+  trails by 1.0 point at normal load and by 2.3 points under contention, and
+  its p95 wait is worse.
+- Its win is **cost**. Spot-first placement cuts the average price from
+  $2.19 to $1.24 per GPU-hour at normal load. The cost is about 2x the
+  preemptions and 1.5x the lost GPU-minutes.
+- Every preemption was recovered from its checkpoint, and no job failed.
+  Whether a resume moves pools depends on free capacity at that moment: 89 of
+  138 moved for best-fit at normal load, but only 49 of 148 under contention.
+  The rest went back to the preempting pool because it was the only one with
+  room, or the only fit (L4 exists only as spot). That pool is tried last, not
+  excluded.
+- Utilization stays below 60% even under contention. The likely cause is that
+  most jobs are pinned to one GPU type, so the busiest type sets the makespan
+  while other pools sit idle. Node-level packing hardly matters here: inside a
+  homogeneous pool, first-fit in node order already fills the lowest nodes
+  first, so pool order dominates the result.
+- The API p99 is about 8 ms on loopback at 32 concurrent clients. That is
+  mostly lock contention plus reconcile scanning a growing queue.
 
 ## Limitations
 
@@ -173,7 +232,18 @@ RESULTS_PLACEHOLDER
   errors surface as `urllib.error.HTTPError`.
 - No auth or TLS on the API.
 
-UNFINISHED_PLACEHOLDER
+## Unfinished
+
+- **No laptop sanity run.** The build session had no Go toolchain it was
+  allowed to install. Every Go number above comes from the CI runner, not a
+  laptop. To reproduce locally, run the Bench commands. The simulator is
+  deterministic for a given seed, so the simulate tables should match exactly.
+  Load-test latencies will differ by machine.
+- **No scheduling policy that beats first-fit on utilization yet.** The obvious
+  next steps are reservations or backfill for large gangs, and a
+  price-plus-preemption-risk score in place of strict spot-first ordering.
+- No Dockerfile or deployment manifests. The control plane runs only as a
+  local binary.
 
 ## License
 
