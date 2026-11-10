@@ -27,6 +27,7 @@ jobs:
         run: |
           set -o pipefail
           go run ./cmd/simulate 2>&1 | tee out/simulate.txt
+          go run ./cmd/simulate -gap 1 2>&1 | tee out/simulate-heavy.txt
           go run ./cmd/loadtest -n 5000 -c 32 2>&1 | tee out/loadtest.txt
       - name: gofmt
         run: |

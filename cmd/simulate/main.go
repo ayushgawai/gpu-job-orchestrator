@@ -11,9 +11,10 @@ import (
 func main() {
 	seed := flag.Int64("seed", 42, "workload seed")
 	n := flag.Int("jobs", 1000, "number of jobs")
+	gap := flag.Float64("gap", 3, "mean minutes between job arrivals (lower = more contention)")
 	flag.Parse()
-	best, first := sim.Compare(*seed, *n)
-	fmt.Printf("workload: %d jobs, seed %d, 512 simulated GPUs, 1-min ticks\n\n", *n, *seed)
+	best, first := sim.Compare(*seed, *n, *gap)
+	fmt.Printf("workload: %d jobs, seed %d, mean arrival gap %.1f min, 512 simulated GPUs, 1-min ticks\n\n", *n, *seed, *gap)
 	fmt.Printf("%-10s %5s %8s %6s %9s %9s %8s %9s %10s %9s %7s\n",
 		"scheduler", "done", "makespan", "util", "waitP50m", "waitP95m", "preempt", "recovered", "crossPool", "lostGPUm", "$/GPUh")
 	for _, r := range []sim.Result{best, first} {

@@ -39,15 +39,16 @@ func Quotas() map[string]int {
 	return map[string]int{"alpha": 160, "beta": 160, "gamma": 128, "delta": 128}
 }
 
-// Generate builds a deterministic mixed training/inference workload.
-func Generate(seed int64, n int) []*job.Job {
+// Generate builds a deterministic mixed training/inference workload with
+// exponential inter-arrival gaps averaging gapMin minutes.
+func Generate(seed int64, n int, gapMin float64) []*job.Job {
 	r := rand.New(rand.NewSource(seed))
 	gpuTypes := []string{"H100", "A100", "A10G", "L4", ""}
 	sizes := []int{1, 2, 4, 4, 8, 8, 16}
 	jobs := make([]*job.Job, 0, n)
 	arrival := 0.0
 	for i := 0; i < n; i++ {
-		arrival += r.ExpFloat64() * 3 // ~20 jobs/hour, ~50 simulated hours for 1,000 jobs
+		arrival += r.ExpFloat64() * gapMin // gap 3 = ~20 jobs/hour, ~50 simulated hours for 1,000 jobs
 		gt := gpuTypes[r.Intn(len(gpuTypes))]
 		spec := job.Spec{
 			Name: fmt.Sprintf("job-%04d", i), Tenant: tenants[i%len(tenants)],
@@ -68,8 +69,8 @@ type downNode struct {
 	until int
 }
 
-func Run(mode scheduler.Mode, seed int64, n int) Result {
-	jobs := Generate(seed, n)
+func Run(mode scheduler.Mode, seed int64, n int, gapMin float64) Result {
+	jobs := Generate(seed, n, gapMin)
 	cl := cluster.MustDefault()
 	s := scheduler.New(cl, mode, Quotas())
 	price := map[string]float64{}
@@ -206,6 +207,6 @@ func pct(vals []float64, p float64) float64 {
 }
 
 // Compare runs both schedulers on the same workload.
-func Compare(seed int64, n int) (best, first Result) {
-	return Run(scheduler.BestFit, seed, n), Run(scheduler.FirstFit, seed, n)
+func Compare(seed int64, n int, gapMin float64) (best, first Result) {
+	return Run(scheduler.BestFit, seed, n, gapMin), Run(scheduler.FirstFit, seed, n, gapMin)
 }

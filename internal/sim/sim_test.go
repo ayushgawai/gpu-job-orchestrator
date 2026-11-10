@@ -70,7 +70,7 @@ func TestPreemptionAndResumeE2E(t *testing.T) {
 }
 
 func TestSimulationCompletesWorkload(t *testing.T) {
-	best, first := Compare(42, 300)
+	best, first := Compare(42, 300, 3)
 	for _, r := range []Result{best, first} {
 		if r.Completed != 300 {
 			t.Fatalf("%s completed %d/300", r.Mode, r.Completed)
@@ -88,7 +88,7 @@ func TestSimulationCompletesWorkload(t *testing.T) {
 }
 
 func TestGenerateDeterministic(t *testing.T) {
-	a, b := Generate(7, 50), Generate(7, 50)
+	a, b := Generate(7, 50, 3), Generate(7, 50, 3)
 	for i := range a {
 		if a[i].Spec != b[i].Spec || a[i].SubmittedAtMin != b[i].SubmittedAtMin {
 			t.Fatalf("job %d differs between runs with same seed", i)
