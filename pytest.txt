@@ -1,0 +1,7 @@
+test_cli_submit_maps_flags (test_gpu_jobs.TestClient.test_cli_submit_maps_flags) ... ok
+test_submit_sends_idempotency_key (test_gpu_jobs.TestClient.test_submit_sends_idempotency_key) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.003s
+
+OK

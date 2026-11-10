@@ -1,0 +1,2 @@
+requests=5000 errors=0 concurrency=32 elapsed=779ms throughput=6419 req/s
+latency ms: p50=3.93 p95=12.90 p99=13.80 max=14.65

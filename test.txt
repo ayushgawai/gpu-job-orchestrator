@@ -1,0 +1,45 @@
+?   	github.com/ayushgawai/gpu-job-orchestrator/cmd/loadtest	[no test files]
+?   	github.com/ayushgawai/gpu-job-orchestrator/cmd/orchestrator	[no test files]
+?   	github.com/ayushgawai/gpu-job-orchestrator/cmd/simulate	[no test files]
+=== RUN   TestHealthAndIdempotentSubmit
+--- PASS: TestHealthAndIdempotentSubmit (0.00s)
+=== RUN   TestPreemptResumeFromCheckpointE2E
+--- PASS: TestPreemptResumeFromCheckpointE2E (0.00s)
+=== RUN   TestQueueDrainsByPriorityWhenCapacityFrees
+--- PASS: TestQueueDrainsByPriorityWhenCapacityFrees (0.00s)
+=== RUN   TestValidationAndCancel
+--- PASS: TestValidationAndCancel (0.00s)
+PASS
+ok  	github.com/ayushgawai/gpu-job-orchestrator/internal/api	1.024s
+?   	github.com/ayushgawai/gpu-job-orchestrator/internal/cluster	[no test files]
+?   	github.com/ayushgawai/gpu-job-orchestrator/internal/job	[no test files]
+=== RUN   TestGangAllOrNothing
+--- PASS: TestGangAllOrNothing (0.00s)
+=== RUN   TestBestFitPacksTightestNode
+--- PASS: TestBestFitPacksTightestNode (0.00s)
+=== RUN   TestSpotPreferredThenFallback
+--- PASS: TestSpotPreferredThenFallback (0.00s)
+=== RUN   TestQuotaEnforced
+--- PASS: TestQuotaEnforced (0.00s)
+=== RUN   TestResumeMovesOffPreemptedPool
+--- PASS: TestResumeMovesOffPreemptedPool (0.00s)
+=== RUN   TestResumeFallsBackToSamePoolWhenOnlyFit
+--- PASS: TestResumeFallsBackToSamePoolWhenOnlyFit (0.00s)
+=== RUN   TestRestoreUpNodeIsNoop
+--- PASS: TestRestoreUpNodeIsNoop (0.00s)
+=== RUN   TestQuotaReleasedFreesCapacity
+--- PASS: TestQuotaReleasedFreesCapacity (0.00s)
+=== RUN   TestPriorityOrdering
+--- PASS: TestPriorityOrdering (0.00s)
+=== RUN   TestFirstFitUsesTopologyOrder
+--- PASS: TestFirstFitUsesTopologyOrder (0.00s)
+PASS
+ok  	github.com/ayushgawai/gpu-job-orchestrator/internal/scheduler	1.019s
+=== RUN   TestPreemptionAndResumeE2E
+--- PASS: TestPreemptionAndResumeE2E (0.00s)
+=== RUN   TestSimulationCompletesWorkload
+--- PASS: TestSimulationCompletesWorkload (0.09s)
+=== RUN   TestGenerateDeterministic
+--- PASS: TestGenerateDeterministic (0.00s)
+PASS
+ok  	github.com/ayushgawai/gpu-job-orchestrator/internal/sim	1.101s

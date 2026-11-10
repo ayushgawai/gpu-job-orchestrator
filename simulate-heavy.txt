@@ -1,0 +1,7 @@
+workload: 1000 jobs, seed 42, mean arrival gap 1.0 min, 512 simulated GPUs, 1-min ticks
+
+scheduler   done makespan   util  waitP50m  waitP95m  preempt recovered  crossPool  lostGPUm  $/GPUh
+best-fit    1000    45.5h  56.5%         8      1164      148       148         49      5164    1.66
+first-fit   1000    43.6h  58.8%         8      1105       99        99         20      3430    1.76
+
+best-fit vs first-fit: utilization -2.3 pts, wait p50 +1 min, wait p95 +59 min, $/GPU-hour -0.09
