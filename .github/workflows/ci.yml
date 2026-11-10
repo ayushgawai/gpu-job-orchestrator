@@ -1,5 +1,10 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: write # publish the raw sanity-run output to the bench-results branch
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -11,12 +16,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: go vet ./...
-      - run: go test -race -count=1 -v ./...
-      - run: python -m unittest discover -s sdk/python -v
-      - name: simulation (1,000 jobs)
-        run: go run ./cmd/simulate
-      - name: API load test
-        run: go run ./cmd/loadtest -n 5000 -c 32
+      - name: vet + test
+        run: |
+          set -o pipefail
+          mkdir -p out
+          go vet ./... 2>&1 | tee out/vet.txt
+          go test -race -count=1 -v ./... 2>&1 | tee out/test.txt
+          python -m unittest discover -s sdk/python -v 2>&1 | tee out/pytest.txt
+      - name: simulation (1,000 jobs) + API load test
+        run: |
+          set -o pipefail
+          go run ./cmd/simulate 2>&1 | tee out/simulate.txt
+          go run ./cmd/loadtest -n 5000 -c 32 2>&1 | tee out/loadtest.txt
       - name: gofmt
-        run: test -z "$(gofmt -l .)" || (gofmt -d . && exit 1)
+        run: |
+          gofmt -d . 2>&1 | tee out/gofmt.txt
+          test ! -s out/gofmt.txt
+      - name: publish results
+        if: always() && github.event_name == 'push'
+        run: |
+          cd out
+          { echo "commit $GITHUB_SHA"; go version; nproc; lscpu | grep 'Model name'; } > env.txt 2>&1
+          git init -q -b bench-results
+          git add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "CI sanity run for $GITHUB_SHA"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" bench-results
