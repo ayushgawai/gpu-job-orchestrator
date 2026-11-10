@@ -1,0 +1,15 @@
+[project]
+name = "gpu-jobs"
+version = "0.1.0"
+description = "Client and CLI for gpu-job-orchestrator"
+requires-python = ">=3.9"
+
+[project.scripts]
+gpu-jobs = "gpu_jobs:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["gpu_jobs"]

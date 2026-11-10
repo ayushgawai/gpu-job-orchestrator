@@ -1,0 +1,22 @@
+# Go
+/bin/
+*.test
+*.out
+coverage.*
+
+# local toolchain downloads
+*.tgz
+*.tar.gz
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+build/
+dist/
+
+# editors / OS
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,22 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: go vet ./...
+      - run: go test -race -count=1 -v ./...
+      - run: python -m unittest discover -s sdk/python -v
+      - name: simulation (1,000 jobs)
+        run: go run ./cmd/simulate
+      - name: API load test
+        run: go run ./cmd/loadtest -n 5000 -c 32
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -d . && exit 1)
